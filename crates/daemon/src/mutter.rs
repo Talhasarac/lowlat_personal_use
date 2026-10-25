@@ -38,7 +38,7 @@ const SESSION: &str = "org.gnome.Mutter.RemoteDesktop.Session";
 /// **Every name a program might paste text by**, because the one asking is
 /// whatever has focus: a native program asks by the first, one running under
 /// the X server by one of the others. All of them are served the same UTF-8.
-const OFFERED: [&str; 5] = [
+pub(crate) const OFFERED: [&str; 5] = [
     "text/plain;charset=utf-8",
     "UTF8_STRING",
     "text/plain",
@@ -47,7 +47,7 @@ const OFFERED: [&str; 5] = [
 ];
 
 /// What the desktop's clipboard is read as, the first one it offers.
-const WANTED: [&str; 3] = ["text/plain;charset=utf-8", "UTF8_STRING", "text/plain"];
+pub(crate) const WANTED: [&str; 3] = ["text/plain;charset=utf-8", "UTF8_STRING", "text/plain"];
 
 /// The most text read off the desktop's clipboard.
 ///
@@ -493,7 +493,7 @@ fn handed(reply: In, at: usize) -> Result<OwnedFd, String> {
 ///
 /// **A plain read would close them.** The kernel hands descriptors over only
 /// to the call that asks for them and discards them for one that does not.
-fn receive(
+pub(crate) fn receive(
     stream: &UnixStream,
     into: &mut [u8],
     fds: &mut VecDeque<OwnedFd>,
@@ -538,7 +538,7 @@ fn receive(
 }
 
 /// Read a descriptor to its end, or fail at the cap or the deadline.
-fn drain(fd: OwnedFd, until: Instant) -> Result<Vec<u8>, String> {
+pub(crate) fn drain(fd: OwnedFd, until: Instant) -> Result<Vec<u8>, String> {
     let mut file = std::fs::File::from(fd);
     nonblocking(&file)?;
     let mut got = Vec::new();
@@ -562,7 +562,7 @@ fn drain(fd: OwnedFd, until: Instant) -> Result<Vec<u8>, String> {
 }
 
 /// Write all of the bytes to a descriptor, or fail at the deadline.
-fn fill(fd: OwnedFd, bytes: &[u8], until: Instant) -> Result<(), String> {
+pub(crate) fn fill(fd: OwnedFd, bytes: &[u8], until: Instant) -> Result<(), String> {
     let mut file = std::fs::File::from(fd);
     nonblocking(&file)?;
     let mut at = 0;

@@ -18,6 +18,8 @@ mod app;
 #[cfg(target_os = "linux")]
 mod channel;
 #[cfg(target_os = "linux")]
+mod datacontrol;
+#[cfg(target_os = "linux")]
 mod dbus;
 mod display;
 #[cfg(target_os = "linux")]

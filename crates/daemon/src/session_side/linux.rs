@@ -7,7 +7,7 @@ use std::collections::{HashMap, HashSet};
 use lowlat_host::admission::Admission;
 
 use crate::service::{Introduced, occupancy};
-use crate::{app, channel, dbus, mutter, seat, sni};
+use crate::{app, channel, datacontrol, dbus, mutter, seat, sni};
 
 /// The session agent: connect outward, say what this is, and hold the
 /// connection for as long as the session does.
@@ -36,9 +36,11 @@ pub(crate) fn session() -> ! {
             None
         }
     };
-    // **The desktop's own clipboard component where it has one, and GNOME's
-    // compositor where it has none.** Both are the same capability to the
-    // service, which never learns which one answered.
+    // **The desktop's own clipboard component where it has one, GNOME's
+    // compositor where it has none, and a wlroots compositor's clipboard
+    // protocol where neither answers** -- the Raspberry Pi's labwc among them.
+    // All are the same capability to the service, which never learns which
+    // one answered.
     let clip: Option<Box<dyn Selection>> = match dbus::Clip::connect() {
         Ok(clip) => Some(Box::new(clip)),
         Err(kde) => match mutter::Clip::connect() {
@@ -48,10 +50,15 @@ pub(crate) fn session() -> ! {
                 );
                 Some(Box::new(clip))
             }
-            Err(gnome) => {
-                lowlat_common::log_warn!("session: no clipboard to own, error={kde}; {gnome}");
-                None
-            }
+            Err(gnome) => match datacontrol::Clip::connect() {
+                Ok(clip) => Some(Box::new(clip)),
+                Err(wayland) => {
+                    lowlat_common::log_warn!(
+                        "session: no clipboard to own, error={kde}; {gnome}; {wayland}"
+                    );
+                    None
+                }
+            },
         },
     };
     // **Watched rather than asked for, which is the whole reason this is here
@@ -508,6 +515,16 @@ trait Selection: Send {
 }
 
 impl Selection for dbus::Clip {
+    fn write(&mut self, text: &str) -> Result<(), String> {
+        Self::write(self, text)
+    }
+
+    fn changed(&mut self, within: std::time::Duration) -> Option<String> {
+        Self::changed(self, within)
+    }
+}
+
+impl Selection for datacontrol::Clip {
     fn write(&mut self, text: &str) -> Result<(), String> {
         Self::write(self, text)
     }
