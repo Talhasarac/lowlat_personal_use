@@ -8,14 +8,23 @@
 > - [#4](https://github.com/nomi-san/lowlat/pull/4): a game on an AMD APU no longer freezes the stream on old pictures.
 > - [#5](https://github.com/nomi-san/lowlat/pull/5): GNOME's `HDMI-1` is matched to the kernel's `HDMI-A-1`, so the pointer stays on an HDMI screen.
 > - [#6](https://github.com/nomi-san/lowlat/pull/6): HEVC works on Intel's integrated GPUs instead of hanging the GPU.
-> - Copy and paste with a Parsec client works on GNOME, both ways. Only in this build: GNOME has no
->   clipboard lowlat could reach, and this reaches it through Mutter's remote desktop interface.
+> - Copy and paste with a Parsec client works on GNOME and on Hyprland, both ways. Only in this
+>   build: neither has a clipboard lowlat could reach. GNOME's is reached through Mutter's remote
+>   desktop interface, Hyprland's (and other wlroots desktops') through Wayland's data-control
+>   protocol.
 >
 > To install, download the newest `.deb` from this repository's Releases, then:
 >
 > ```sh
 > sudo apt install ./lowlat-personal.deb
 > sudo lowlat-login --install
+> ```
+>
+> On Hyprland, which never starts `graphical-session.target`, also add this to
+> `~/.config/hypr/hyprland.conf` so the session helper (copy and paste) and the tray start:
+>
+> ```
+> exec-once = systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP && systemctl --user start lowlat-session lowlat-tray
 > ```
 >
 > The project, its docs and its issues live upstream. Everything below is upstream's README,
